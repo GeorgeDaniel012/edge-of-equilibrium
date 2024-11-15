@@ -1,73 +1,51 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class player1 : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField]
-    private float _speed = 5;
-    [SerializeField]
-    private float maxAngVelocity = 10;
-    
-    private Rigidbody rigidbody;
-    private bool forwardKeyPressed;
-    private bool backwardKeyPressed;
-    private bool leftKeyPressed;
-    private bool rightKeyPressed;
+    public float moveSpeed = 800;
+    public float rollSpeed = 50;
 
-    // Start is called before the first frame update
+    private Rigidbody rb;
+    public Transform cameraTransform; // reference to the camera transform, so that
+                                      // the input direction corresponds with the camera
+                                      //angle
+
     void Start()
     {
-        rigidbody = GetComponent<Rigidbody>();
-        rigidbody.maxAngularVelocity = maxAngVelocity;
+        rb = GetComponent<Rigidbody>();
     }
 
-    // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        if(Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-        {
-            forwardKeyPressed = true;
-            //transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + _speed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-        {
-            backwardKeyPressed = true;
-            //transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z - _speed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            leftKeyPressed = true;
-            //transform.position = new Vector3(transform.position.x - _speed * Time.deltaTime, transform.position.y, transform.position.z);
-        }
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-        {
-            rightKeyPressed = true;
-            //transform.position = new Vector3(transform.position.x + _speed * Time.deltaTime, transform.position.y, transform.position.z);
-        }
-    }
+        // input
+        float moveHorizontal = Input.GetAxis("Horizontal"); // A/D or left/right arrow
+        float moveVertical = Input.GetAxis("Vertical"); // W/S or up/down arrow
 
-    private void FixedUpdate()
-    {
-        if(forwardKeyPressed)
+        // movement direction relative to the camera
+        Vector3 forward = cameraTransform.forward;
+        Vector3 right = cameraTransform.right;
+
+        // purely horizontal directions, parallel to the ground,
+        // regardless of the camera’s tilt
+        forward.y = 0;
+        right.y = 0;
+
+        // we ensure that the movement has a fixed speed
+        forward.Normalize();
+        right.Normalize();
+
+        // movement direction relative to camera's forward and right
+        Vector3 movement = (forward * moveVertical + right * moveHorizontal).normalized;
+
+        // we apply force based on mass (ForceMode.Force)
+        rb.AddForce(movement * moveSpeed * Time.fixedDeltaTime, ForceMode.Force);
+
+        // Calculate rotation based on movement direction
+        if (movement != Vector3.zero)
         {
-            rigidbody.AddForce(new Vector3(0, 0, _speed));
-            forwardKeyPressed = false;
-        }
-        if(leftKeyPressed)
-        {
-            rigidbody.AddForce(new Vector3(-_speed, 0, 0));
-            leftKeyPressed = false;
-        }
-        if(rightKeyPressed)
-        {
-            rigidbody.AddForce(new Vector3(_speed, 0, 0));
-            rightKeyPressed = false;
-        }
-        if (backwardKeyPressed)
-        {
-            rigidbody.AddForce(new Vector3(0, 0, -_speed));
-            backwardKeyPressed = false;
+            float rollAmount = rollSpeed * Time.fixedDeltaTime;
+            Vector3 rollAxis = Vector3.Cross(Vector3.up, movement);
+            rb.AddTorque(rollAxis * rollAmount, ForceMode.Force); // Apply rotation
         }
     }
 }
