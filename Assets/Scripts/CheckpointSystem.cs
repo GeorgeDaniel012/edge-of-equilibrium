@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System.Collections;
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -11,8 +10,8 @@ public class CheckpointSystem : MonoBehaviour
     private Rigidbody rigidbody;
     private BallMaterial playerBallMaterial;
     public Transform player;
-    public GameObject heart3D;
-    private Vector3 originalHeartPosition;
+    public GameObject heart3D; 
+    private Vector3 originalHeartPosition; 
 
     //to delete PlayerPrefs if using the unity editor and not the build version
 #if UNITY_EDITOR
@@ -34,11 +33,11 @@ public class CheckpointSystem : MonoBehaviour
         }
     }
 #endif
-
-    private void OnSceneUnloaded(Scene scene)
-    {
-        PlayerPrefs.DeleteAll();
-    }
+	
+	private void OnSceneUnloaded(Scene scene)
+	{
+		PlayerPrefs.DeleteAll();
+	}
 
     public void SaveBallMaterial()
     {
@@ -92,9 +91,19 @@ public class CheckpointSystem : MonoBehaviour
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }*/
 
-    IEnumerator SetPlayerPositionAndMaterialDelayed()
+    void Start()
     {
-        yield return new WaitForSeconds(0.2f);
+        /*		// Load respawn position from PlayerPrefs
+                float x = PlayerPrefs.GetFloat("RespawnX");
+                float y = PlayerPrefs.GetFloat("RespawnY");
+                float z = PlayerPrefs.GetFloat("RespawnZ");
+                respawnPosition = new Vector3(x, y, z);*/
+
+        // getting current rigidbody (for position)
+        // and ballmaterial of player
+        rigidbody = player.GetComponent<Rigidbody>();
+        playerBallMaterial = rigidbody.GetComponent<MaterialController>().ballMaterial;
+
         float x = PlayerPrefs.GetFloat("RespawnX");
         float y = PlayerPrefs.GetFloat("RespawnY");
         float z = PlayerPrefs.GetFloat("RespawnZ");
@@ -109,24 +118,7 @@ public class CheckpointSystem : MonoBehaviour
             respawnPosition = new Vector3(x, y, z);
             player.position = respawnPosition;
             Debug.Log($"Player respawned at: {respawnPosition}");
-            Debug.Log($"Player position after update: {player.position}");
         }
-    }
-
-    void Start()
-    {
-        /*		// Load respawn position from PlayerPrefs
-                float x = PlayerPrefs.GetFloat("RespawnX");
-                float y = PlayerPrefs.GetFloat("RespawnY");
-                float z = PlayerPrefs.GetFloat("RespawnZ");
-                respawnPosition = new Vector3(x, y, z);*/
-
-        // getting current rigidbody (for position)
-        // and ballmaterial of player
-        rigidbody = player.GetComponent<Rigidbody>();
-        playerBallMaterial = rigidbody.GetComponent<MaterialController>().ballMaterial;
-
-        StartCoroutine(SetPlayerPositionAndMaterialDelayed());
 
         if (heart3D != null)
         {
@@ -170,39 +162,37 @@ public class CheckpointSystem : MonoBehaviour
             {
                 PlayerPrefs.DeleteAll(); // clear checkpoint data
                 ResetHeart();
-                LifeSystem.lives = lifeSystem.startLives;
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                LifeSystem.lives = lifeSystem.startLives; 
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
                 return; //avoid checkpoint logic
             }
             else
             {
-                lifeSystem.LoseLife();
+                lifeSystem.LoseLife(); 
             }
         }
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-
-/*        // else respawn at the last checkpoint
+        // else respawn at the last checkpoint
         if (respawnPosition != Vector3.zero)
         {
-            player.position = respawnPosition;
-            rigidbody.velocity = Vector3.zero;
+            player.position = respawnPosition; 
+            rigidbody.velocity = Vector3.zero; 
         }
         else
         {
             // if no checkpoint is set, reload the scene
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }*/
+        }
     }
 
 
 
-    private void ResetHeart()
+     private void ResetHeart()
     {
         if (heart3D != null)
         {
-            heart3D.SetActive(true);
-            heart3D.transform.position = originalHeartPosition;
+            heart3D.SetActive(true); 
+            heart3D.transform.position = originalHeartPosition; 
         }
 
         // Remove the heart from the collected list
